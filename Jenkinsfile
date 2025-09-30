@@ -14,7 +14,7 @@ pipeline {
 		timeout(time: 30, unit: 'MINUTES')
 	}
 	
-	stage {
+	stages {
 		stage('Install Dependencies') {
 			steps {
 				sh 'npm install --save'
