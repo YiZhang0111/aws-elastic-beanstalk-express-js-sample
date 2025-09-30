@@ -9,6 +9,10 @@ pipeline {
 	environment {
 		DOCKER_IMAGE = "YiZhang0111/nodejs-app:latest"
 	}
+	options {
+		buildDiscarder(logRotator(numToKeepStr: '10'))
+		timeout(time: 30, unit: 'MINUTES')
+	}
 	
 	stage {
 		stage('Install Dependencies') {
