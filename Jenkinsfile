@@ -7,7 +7,7 @@ pipeline {
 	}
 
 	environment {
-		DOCKER_HOST = 'tcp://dind:2375'
+		DOCKER_HOST = 'tcp://dind:2376'
 		DOCKER_IMAGE = "YiZhang0111/nodejs-app:latest"
 	}
 	options {
