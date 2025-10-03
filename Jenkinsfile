@@ -23,6 +23,7 @@ pipeline {
       steps {
         sh '''
           set -eux
+	  npm install --package-lock-only
           docker run --rm \
             -v "$WORKSPACE":/workspace -w /workspace \
             node:16 bash -lc "
