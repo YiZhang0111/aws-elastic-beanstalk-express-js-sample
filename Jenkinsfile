@@ -42,12 +42,8 @@ pipeline {
             docker run --rm \
 	      --platform linux/amd64 \
               -e SNYK_TOKEN="$SNYK_TOKEN" \
-              -v "$WORKSPACE":/workspace -w /workspace \
-              node:16 bash -lc "
-                npm i -g snyk;
-                snyk auth \"$SNYK_TOKEN\";
-                snyk test --severity-threshold=high
-              "
+              -v $WORKSPACE:/project \
+                snyk/snyk-cli:docker snyk test --severity-threshold=high
           '''
         }
       }
