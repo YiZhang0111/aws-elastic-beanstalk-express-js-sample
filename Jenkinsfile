@@ -40,6 +40,7 @@ pipeline {
           sh '''
             set -eux
             docker run --rm \
+	      --platform linux/amd64 \
               -e SNYK_TOKEN="$SNYK_TOKEN" \
               -v "$WORKSPACE":/workspace -w /workspace \
               node:16 bash -lc "
