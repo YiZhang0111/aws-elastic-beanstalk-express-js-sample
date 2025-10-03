@@ -44,7 +44,7 @@ pipeline {
               -v $WORKSPACE:/workspace -w /workspace node:16 bash -lc "
 		npm install -g snyk@1.1090.0 && \
 		snyk auth $SNYK_TOKEN && \
-                snyk test --severity-threshold=high
+                snyk test --file=package.json --severity-threshold=high
 		" 
 	 '''
         }
