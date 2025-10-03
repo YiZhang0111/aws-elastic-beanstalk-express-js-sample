@@ -38,11 +38,13 @@ pipeline {
       steps {
         withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
           sh '''
-            docker run --rm \
-              -e SNYK_TOKEN="$SNYK_TOKEN" \
-              -v $WORKSPACE:/project \
-                snyk/snyk-cli:linux snyk test --severity-threshold=high
-          '''
+            docker run --rm -e SNYK_TOKEN="$SNYK_TOKEN" \
+              -v $WORKSPACE:/workspace -w /workspace node:16 bash -lc "
+		npm install -g snyk && \
+		snyk auth $SNYK_TOKEN && \
+                snyk test --severity-threshold=high
+		" 
+	 '''
         }
       }
     }
