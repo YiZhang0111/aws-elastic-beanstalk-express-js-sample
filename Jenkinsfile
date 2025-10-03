@@ -41,7 +41,7 @@ pipeline {
             docker run --rm \
               -e SNYK_TOKEN="$SNYK_TOKEN" \
               -v $WORKSPACE:/project \
-                snyk/snyk-cli:docker snyk test --severity-threshold=high
+                snyk/snyk-cli:linux snyk test --severity-threshold=high
           '''
         }
       }
