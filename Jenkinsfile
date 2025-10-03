@@ -28,6 +28,7 @@ pipeline {
         sh '''
 	      set -eux
               node -v && npm -v;
+	      npm install --save;
 	      npm install --package-lock-only;
               npm install;
               npm test || echo 'No tests defined, skipping'
