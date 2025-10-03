@@ -42,9 +42,9 @@ pipeline {
           sh '''
             docker run --rm -e SNYK_TOKEN="$SNYK_TOKEN" \
               -v $WORKSPACE:/workspace -w /workspace node:16 bash -lc "
-		npm install -g snyk@1.1090.0 && \
+		npm install -g snyk@latest && \
 		snyk auth $SNYK_TOKEN && \
-                snyk test --file=package.json --severity-threshold=high
+                snyk test --severity-threshold=high
 		" 
 	 '''
         }
