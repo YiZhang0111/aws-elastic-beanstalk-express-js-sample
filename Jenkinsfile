@@ -26,6 +26,7 @@ pipeline {
     stage('Install & Test') {
       steps {
         sh '''
+	      set -eux
               node -v && npm -v;
 	      npm install --package-lock-only;
               npm install;
@@ -39,12 +40,10 @@ pipeline {
       steps {
         withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
           sh '''
-            docker run --rm -e SNYK_TOKEN="$SNYK_TOKEN" \
-              -v $WORKSPACE:/workspace -w /workspace node:16 bash -lc "
-		npm install -g snyk@1.1050.0 && \
-		snyk auth $SNYK_TOKEN && \
-                snyk test --severity-threshold=high
-		" 
+	    set -eux
+            npm install -g snyk@1.1050.0 && \
+	    snyk auth $SNYK_TOKEN && \
+            snyk test --severity-threshold=high 
 	 '''
         }
       }
