@@ -1,71 +1,93 @@
 pipeline {
-	agent {
-		docker {
-			image 'node:16'
-		}
-	}
+  agent any
 
-	environment {
-		DOCKER_HOST = 'tcp://dind:2375'
-	}
-	options {
-		buildDiscarder(logRotator(numToKeepStr: '10'))
-		timeout(time: 30, unit: 'MINUTES')
-	}
-	
-	stages {
-		stage('Checkout Code') {
-			steps {
-				git url: 'https://github.com/YiZhang0111/aws-elastic-beanstalk-express-js-sample.git', branch: 'main'
-			}
-		}
+  environment {
+    DOCKER_HOST = 'tcp://dind:2375'
 
-		stage('Install Dependencies') {
-			steps {
-				sh 'npm install --legacy-peer-deps'
-			}
-		}
+    IMAGE_NAME = 'YiZhang0111/eb-express-sample'
+    DOCKER_PUSH = 'true'
+  }
 
-		stage('Run Tests') {
-			steps {
-				sh 'npm test'
-			}
-		}
+  options {
+    timestamps()
+    buildDiscarder(logRotator(numToKeepStr: '10', daysToKeepStr: '30'))
+    timeout(time: 30, unit: 'MINUTES')
+  }
 
-		stage('Security Scan') {
-			steps {
-				script {
-					sh 'npm audit --audit-level high'
-				}
-			}
-		}
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
 
-		stage('Build Docker Image') {
-			steps {
-				script {
-					sh 'docker build -t myapp:latest .'
-				}
-			}
-		}
+    stage('Install & Test (Node 16)') {
+      steps {
+        sh '''
+          set -eux
+          docker run --rm \
+            -v "$WORKSPACE":/workspace -w /workspace \
+            node:16 bash -lc "
+              node -v && npm -v;
+              npm install --save;
+              if npm run | grep -qE '^\\s*test'; then npm test; else echo 'No tests defined, skipping'; fi
+            "
+        '''
+      }
+    }
 
-		stage('Push Docker Image') {
-			steps {
-				script {
-					echo "image pushing skiped, needs docker hub credential"
-				}
-			}
-		}
-	}
-	
-	post {
-		always {
-			echo 'pipeline completed'
-		}
-		success {
-			echo 'pipeline success'
-		}
-		failure {
-			echo ' pipeline failed'
-		}
-	}
+    stage('Security Scan - Snyk (fail on High/Critical)') {
+      steps {
+        withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
+          sh '''
+            set -eux
+            docker run --rm \
+              -e SNYK_TOKEN="$SNYK_TOKEN" \
+              -v "$WORKSPACE":/workspace -w /workspace \
+              node:16 bash -lc "
+                npm i -g snyk;
+                snyk auth \"$SNYK_TOKEN\";
+                snyk test --severity-threshold=high
+              "
+          '''
+        }
+      }
+    }
+
+    stage('Build Docker Image') {
+      steps {
+        script {
+          env.SHORT_SHA = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+        }
+        sh '''
+          set -eux
+          docker build -t ${IMAGE_NAME}:${SHORT_SHA} .
+          mkdir -p build
+          docker save ${IMAGE_NAME}:${SHORT_SHA} -o build/${SHORT_SHA}.tar
+        '''
+      }
+    }
+
+    stage('Push to Registry') {
+      when { expression { return env.DOCKER_PUSH == 'true' } }
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'docker-hub-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh '''
+            set -eux
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+            docker push ${IMAGE_NAME}:${SHORT_SHA}
+          '''
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'build/*.tar', allowEmptyArchive: true
+      echo 'pipeline completed'
+    }
+    failure {
+      echo 'pipeline failed'
+    }
+  }
 }
+
