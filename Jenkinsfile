@@ -28,8 +28,8 @@ pipeline {
             node:16 bash -lc "
               node -v && npm -v;
 	      npm install --package-lock-only;
-	      npm install;
-              npm install --save;
+	      npm install express --save;
+              npm install;
               if npm run | grep -qE '^\\s*test'; then npm test; else echo 'No tests defined, skipping'; fi
             "
         '''
