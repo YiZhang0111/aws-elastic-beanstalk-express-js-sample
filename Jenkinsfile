@@ -38,9 +38,7 @@ pipeline {
       steps {
         withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
           sh '''
-            set -eux
             docker run --rm \
-	      --platform linux/amd64 \
               -e SNYK_TOKEN="$SNYK_TOKEN" \
               -v $WORKSPACE:/project \
                 snyk/snyk-cli:docker snyk test --severity-threshold=high
