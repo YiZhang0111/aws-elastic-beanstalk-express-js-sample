@@ -30,7 +30,7 @@ pipeline {
 	      npm install --package-lock-only;
               npm install;
               npm test || echo 'No tests defined, skipping'
-            "
+            
         '''
       }
     }
