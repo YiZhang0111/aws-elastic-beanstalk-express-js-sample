@@ -23,11 +23,11 @@ pipeline {
       steps {
         sh '''
           set -eux
-	  npm install --package-lock-only
           docker run --rm \
             -v "$WORKSPACE":/workspace -w /workspace \
             node:16 bash -lc "
               node -v && npm -v;
+	      npm install --package-lock-only;
               npm install --save;
               if npm run | grep -qE '^\\s*test'; then npm test; else echo 'No tests defined, skipping'; fi
             "
