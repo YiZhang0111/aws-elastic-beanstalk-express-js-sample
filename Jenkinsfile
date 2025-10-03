@@ -1,14 +1,8 @@
 pipeline {
-	agent {
-		docker {
-			image 'node:16'
-			args '-u root:root'
-		}	
-	}
+	agent any
 
 	environment {
 		DOCKER_HOST = 'tcp://dind:2375'
-		DOCKER_IMAGE = "YiZhang0111/nodejs-app:latest"
 	}
 	options {
 		buildDiscarder(logRotator(numToKeepStr: '10'))
@@ -16,9 +10,15 @@ pipeline {
 	}
 	
 	stages {
+		stage('Checkout Code') {
+			steps {
+				git url: 'https://github.com/YiZhang0111/aws-elastic-beanstalk-express-js-sample.git', branch: 'main'
+			}
+		}
+
 		stage('Install Dependencies') {
 			steps {
-				sh 'npm install --save'
+				sh 'npm install --legacy-peer-deps'
 			}
 		}
 
@@ -39,7 +39,7 @@ pipeline {
 		stage('Build Docker Image') {
 			steps {
 				script {
-					sh 'docker build -t ${env.DOCKER_IMAGE} .'
+					sh 'docker build -t myapp:latest .'
 				}
 			}
 		}
